@@ -1,101 +1,70 @@
-const BASE_URL = "http://localhost:3000";
+// List Books
 
-const listPanel = document.querySelector("#list-panel");
-const bookList = document.querySelector("#list");
-const showPanel = document.querySelector("#show-panel");
+// When the page loads, get a list of books from `http://localhost:3000/books` and
+// display their titles by creating a `li` for each book and adding each `li` to
+// the `ul#list` element.
+const BOOKS_API = "http://localhost:3000/books";
+const bookListElement = document.getElementById("book-list");
+const myUser = {
+    id: 666,
+    username: "jyeo"
+}
 
-document.addEventListener("DOMContentLoaded", function() {
-    listBooks();
-});
-
-function listBooks() {
-    fetch(`${BASE_URL}/books`)
+fetch(BOOKS_API)
     .then(resp => resp.json())
-    .then(function(resp) {
-        resp.forEach(function(title) {
-            displayTitles(title)
+    .then(renderBooks);
+
+
+function renderBooks(books) {
+    books.forEach(renderBook)
+    // console.log(books)
+}
+
+function renderBook(book) {
+    const bookListItem = document.createElement("li");
+    bookListItem.textContent = book.title;
+
+    bookListItem.addEventListener("click", () => renderShowPanel(book));
+    bookListElement.append(bookListItem);
+}
+    
+function renderShowPanel(book) {
+    () => {
+        const showPanel = document.getElementById("show-panel");
+
+        showPanel.innerHTML = `
+        <img src="${book.img_url}" alt="${book.title}" />
+        <div><b>${book.title}</b></div>
+        <div><b>${book.subtitle}</b></div>
+        <div><b>${book.author}</b></div>
+        <div><b>${book.description}</b></div>
+        <ul>
+            // map is used ONLY for arrays
+            ${book.users.map(user => `<li>${user.username}</li>`).join('')}
+        </ul>
+        `
+        // Alternative method for slapping the book usernames onto the DOM
+        // const userList = document.createElement("ul")
+        // book.users.forEach(user => {
+        //     const userLi = document.createElement("li")
+        //     userLi.textContent = user.username
+        //     userList.append(userLi)
+        // })
+        // showPanel.append(userList);
+
+        const likeButton = document.createElement("button");
+        likeButton.textContent = "LIKE";
+        likeButton.addEventListener("click", () => {
+            // PATCH request would go here, when it comes back, do a get and render again OR do this:
+            book.users.push(myUser);
+            renderShowPanel(book);
         })
-    })
-    .catch(function(err) {
-        console.log(err)
-    })
-};
 
-function displayTitles(books) {
-    const titleList = document.createElement("li");
-    titleList.className = "title-list";
-    titleList.textContent = books.title;
-
-    bookList.append(titleList);
-
-    titleList.addEventListener("click", () => bookDetails(books))
-};
-
-function bookDetails(books) {
-    const title = document.createElement("h1");
-    title.textContent = books.title;
-
-    const author = document.createElement("h2");
-    author.textContent = books.author;
-
-    const subtitle = document.createElement("h2");
-    subtitle.textContent = books.subtitle;
-
-    const description = document.createElement("p");
-    description.textContent = books.description;
-
-    const img = document.createElement("img");
-    img.src = books.img_url;
-    img.className = "img";
-
-    const users = document.createElement("ul");
-    books.users.forEach(user => {
-        const userListItem = document.createElement("li");
-        userListItem.textContent = user.username
-        users.append(userListItem)
-    })
-
-    const likeBttn = document.createElement("button");
-    likeBttn.textContent = "Like"
-    likeBttn.addEventListener("click", () => submitLike(books))
-
-    // If showPanel is already populated, remove its children so that it does not continously keep adding to the panel
-    while(showPanel.firstChild) {
-        showPanel.removeChild(showPanel.lastChild)
+        showPanel.append(likeButton);
     };
-
-    showPanel.append(img, title, author, subtitle, description, users, likeBttn);
 };
 
-function submitLike(books) {
-    const newUserData = {
-        "id": 1,
-        "username": "pouros"
-    };
-    books.users.push(newUserData);
+// When a user clicks the title of a book, display the book's thumbnail, description,
+// and a list of users who have liked the book. This information should be displayed in
+// the `div#show-panel` element.
 
-    fetch(`${BASE_URL}/books/${books.id}`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({users: books.users})
-    })
-    .then(resp => {
-        if(resp.ok) {
-            console.log("Book liked successfully")
-        } else {
-            console.error("Failed to like the book")
-        }
-    })
-    .catch(err => {
-        console.error("An error occurred", err)
-    })
-};
-
-const books = {
-    "id": 123,
-    "users": []
-};
-submitLike(books)
