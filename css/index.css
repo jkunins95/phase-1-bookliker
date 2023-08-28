@@ -2,3 +2,16 @@ body {
 	display: grid;
 	grid-template-columns: 2fr 8fr
 }
+
+.title-list {
+	margin: 0.5rem;
+}
+
+#show-panel {
+	margin: 0;
+	padding: 5%;
+}
+
+.img {
+	width: 20%;
+}
